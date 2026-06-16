@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Google Cloud BigQuery の最新リリースノートをクリーンでモダンなダッシュボードで確認。フィルター検索、特定のアップデートのツイート共有が可能です。">
+    <title>BigQuery リリースノート ハブ</title>
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="glass-bg-elements">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-database"></i>
+                    <i class="fa-solid fa-magnifying-glass search-sub-icon"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>BigQuery <span>リリースノート</span></h1>
+                    <p class="tagline">Google Cloud BigQuery の最新の開発情報をチェック</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="filter-wrapper">
+                    <select id="type-filter" class="filter-select">
+                        <option value="all">すべての更新</option>
+                        <option value="feature">新機能 (Features)</option>
+                        <option value="changed">変更点 (Changes)</option>
+                        <option value="deprecated">非推奨 (Deprecations)</option>
+                        <option value="issue">既知の問題 (Issues)</option>
+                        <option value="other">その他 (Others)</option>
+                    </select>
+                </div>
+                <button id="refresh-btn" class="btn btn-primary" aria-label="リリースノートを更新する">
+                    <i class="fa-solid fa-rotate-right btn-icon"></i>
+                    <span>更新</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <div class="container">
+            <!-- Stats overview -->
+            <section class="stats-overview" id="stats-section" style="display: none;">
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-total">0</span>
+                    <span class="stat-label">総項目数</span>
+                </div>
+                <div class="stat-card feature-stat">
+                    <span class="stat-value" id="stat-features">0</span>
+                    <span class="stat-label">新機能</span>
+                </div>
+                <div class="stat-card issue-stat">
+                    <span class="stat-value" id="stat-issues">0</span>
+                    <span class="stat-label">問題・非推奨</span>
+                </div>
+            </section>
+
+            <!-- Loading State -->
+            <div id="loading-state" class="state-container">
+                <div class="spinner-wrapper">
+                    <div class="spinner"></div>
+                </div>
+                <p>Google Cloud から最新のアップデートを取得中...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state" class="state-container" style="display: none;">
+                <div class="error-icon">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <h2>リリースノートの取得に失敗しました</h2>
+                <p id="error-message">フィードへの接続中に問題が発生しました。時間をおいてもう一度お試しください。</p>
+                <button id="retry-btn" class="btn btn-secondary">
+                    <i class="fa-solid fa-rotate-right"></i> もう一度試す
+                </button>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="state-container" style="display: none;">
+                <div class="empty-icon">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+                <h2>アップデートが見つかりません</h2>
+                <p>選択したフィルターに一致するリリースノートはありません。</p>
+            </div>
+
+            <!-- Release Notes List -->
+            <div id="notes-container" class="notes-grid" style="display: none;">
+                <!-- Dynamically populated via JS -->
+            </div>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <div class="container">
+            <p>&copy; 2026 BigQuery Release Notes Hub. Google Cloud RSS フィード提供</p>
+        </div>
+    </footer>
+
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
