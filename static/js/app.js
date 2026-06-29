@@ -24,6 +24,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeModalBtn = document.getElementById('close-modal-btn');
     const hashtagChips = document.querySelectorAll('.hashtag-chip');
 
+    // Theme Toggle Elements
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    const iconSun = themeToggleBtn.querySelector('.icon-sun');
+    const iconMoon = themeToggleBtn.querySelector('.icon-moon');
+
     let allParsedItems = [];
     let currentTweetLink = '';
 
@@ -37,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Initialize application
+    initTheme();
     fetchReleaseNotes();
 
     // Event Listeners
@@ -59,6 +65,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     submitTweetBtn.addEventListener('click', submitTweet);
+
+    // Theme Switcher Logic
+    themeToggleBtn.addEventListener('click', () => {
+        const isLight = document.documentElement.classList.toggle('light-theme');
+        if (isLight) {
+            localStorage.setItem('theme', 'light');
+            iconSun.style.display = 'inline-block';
+            iconMoon.style.display = 'none';
+        } else {
+            localStorage.setItem('theme', 'dark');
+            iconSun.style.display = 'none';
+            iconMoon.style.display = 'inline-block';
+        }
+    });
+
+    function initTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'light') {
+            document.documentElement.classList.add('light-theme');
+            iconSun.style.display = 'inline-block';
+            iconMoon.style.display = 'none';
+        } else {
+            document.documentElement.classList.remove('light-theme');
+            iconSun.style.display = 'none';
+            iconMoon.style.display = 'inline-block';
+        }
+    }
+
 
 
     // Fetch feed from backend API
@@ -232,6 +266,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         </time>
                     </div>
                     <div class="note-actions">
+                        <button class="btn btn-secondary btn-utility btn-copy" aria-label="クリップボードにコピー" title="クリップボードにコピー">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                        <button class="btn btn-secondary btn-utility btn-csv" aria-label="CSVにエクスポート" title="CSVにエクスポート">
+                            <i class="fa-solid fa-file-csv"></i>
+                        </button>
                         <button class="btn btn-secondary btn-tweet" aria-label="X (旧Twitter) で共有">
                             <i class="fa-brands fa-x-twitter"></i> ツイート
                         </button>
@@ -248,9 +288,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 tweetUpdate(item.date, typeLabel, item.text, item.link);
             });
 
+            // Attach Copy handler
+            const copyBtn = card.querySelector('.btn-copy');
+            copyBtn.addEventListener('click', () => {
+                copyToClipboard(item.text, copyBtn);
+            });
+
+            // Attach CSV Export handler
+            const csvBtn = card.querySelector('.btn-csv');
+            csvBtn.addEventListener('click', () => {
+                exportToCSV(item.date, typeLabel, item.text, item.link);
+            });
+
             notesContainer.appendChild(card);
         });
     }
+
 
     // Maps update header types to semantic layout classes
     function getSemanticTypeClass(type) {
@@ -344,6 +397,41 @@ document.addEventListener('DOMContentLoaded', () => {
         window.open(intentUrl, '_blank', 'width=550,height=420');
         closeTweetModal();
     }
+
+    function copyToClipboard(text, btnElement) {
+        navigator.clipboard.writeText(text).then(() => {
+            const originalHTML = btnElement.innerHTML;
+            btnElement.innerHTML = '<i class="fa-solid fa-check" style="color: var(--color-feature)"></i>';
+            btnElement.disabled = true;
+            setTimeout(() => {
+                btnElement.innerHTML = originalHTML;
+                btnElement.disabled = false;
+            }, 1500);
+        }).catch(err => {
+            console.error('Copy failed:', err);
+            alert('コピーに失敗しました。');
+        });
+    }
+
+    function exportToCSV(date, typeLabel, text, link) {
+        // Escape quotes in text
+        const escapedText = text.replace(/"/g, '""').replace(/\s+/g, ' ').trim();
+        const csvContent = `"Date","Category","Content","Link"\n"${date}","${typeLabel}","${escapedText}","${link}"\n`;
+        
+        // Use UTF-8 with BOM for Excel compatibility
+        const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const linkElement = document.createElement('a');
+        
+        const cleanDate = date.replace(/年|月/g, '_').replace(/日/g, '');
+        linkElement.setAttribute('href', url);
+        linkElement.setAttribute('download', `bigquery_release_${cleanDate}_${typeLabel}.csv`);
+        linkElement.style.visibility = 'hidden';
+        document.body.appendChild(linkElement);
+        linkElement.click();
+        document.body.removeChild(linkElement);
+    }
+
 
 
     // Controls the visibility states of elements
