@@ -112,6 +112,38 @@
         </div>
     </footer>
 
+    <!-- Tweet Modal -->
+    <div id="tweet-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3><i class="fa-brands fa-x-twitter"></i> ツイートのプレビュー・編集</h3>
+                <button id="close-modal-btn" class="btn-close" aria-label="閉じる">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="tweet-editor-wrapper">
+                    <textarea id="tweet-textarea" rows="6" placeholder="ツイート内容を入力してください..."></textarea>
+                    <div class="tweet-char-counter">
+                        <span id="char-count">0</span> / 280
+                    </div>
+                </div>
+                <div class="hashtag-suggestions">
+                    <span class="hashtag-label">タグ追加:</span>
+                    <button class="hashtag-chip" data-tag="#BigQuery">#BigQuery</button>
+                    <button class="hashtag-chip" data-tag="#GoogleCloud">#GoogleCloud</button>
+                    <button class="hashtag-chip" data-tag="#GCP">#GCP</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-tweet-btn" class="btn btn-secondary">キャンセル</button>
+                <button id="submit-tweet-btn" class="btn btn-primary">
+                    <i class="fa-brands fa-x-twitter"></i> Xで投稿
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>

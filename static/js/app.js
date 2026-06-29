@@ -15,7 +15,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const statFeatures = document.getElementById('stat-features');
     const statIssues = document.getElementById('stat-issues');
 
+    // Tweet modal elements
+    const tweetModal = document.getElementById('tweet-modal');
+    const tweetTextarea = document.getElementById('tweet-textarea');
+    const charCount = document.getElementById('char-count');
+    const submitTweetBtn = document.getElementById('submit-tweet-btn');
+    const cancelTweetBtn = document.getElementById('cancel-tweet-btn');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const hashtagChips = document.querySelectorAll('.hashtag-chip');
+
     let allParsedItems = [];
+    let currentTweetLink = '';
 
     // Type translations for Japanese UI
     const typeLabels = {
@@ -33,6 +43,23 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshBtn.addEventListener('click', fetchReleaseNotes);
     retryBtn.addEventListener('click', fetchReleaseNotes);
     typeFilter.addEventListener('change', filterAndRenderNotes);
+
+    // Modal Event Listeners
+    closeModalBtn.addEventListener('click', closeTweetModal);
+    cancelTweetBtn.addEventListener('click', closeTweetModal);
+    tweetModal.addEventListener('click', (e) => {
+        if (e.target === tweetModal) {
+            closeTweetModal();
+        }
+    });
+    tweetTextarea.addEventListener('input', updateCharCount);
+    hashtagChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            toggleHashtag(chip);
+        });
+    });
+    submitTweetBtn.addEventListener('click', submitTweet);
+
 
     // Fetch feed from backend API
     async function fetchReleaseNotes() {
@@ -235,13 +262,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'other';
     }
 
-    // Construct and fire Twitter Web Intent
+    // Construct tweet template and open editor modal
     function tweetUpdate(date, typeLabel, text, link) {
         // Build Japanese tweet text format
         const prefix = `【BigQuery アップデート】${date} [${typeLabel}] `;
         const maxTweetLen = 280;
         
-        // Link reserved length
+        // Link reserved length (approx 23 chars for short link in twitter)
         const reservedLen = 30;
         const availableTextLen = maxTweetLen - prefix.length - reservedLen;
         
@@ -251,10 +278,73 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         const fullTweetText = `${prefix}${cleanContent}`;
-        const intentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(fullTweetText)}&url=${encodeURIComponent(link)}`;
-        
-        window.open(intentUrl, '_blank', 'width=550,height=420');
+        openTweetModal(fullTweetText, link);
     }
+
+    function openTweetModal(text, link) {
+        currentTweetLink = link;
+        tweetTextarea.value = text;
+        
+        // Reset hashtag chip styles
+        hashtagChips.forEach(chip => {
+            chip.classList.remove('selected');
+        });
+
+        // Initialize state
+        updateCharCount();
+        
+        // Show modal with animation
+        tweetModal.style.display = 'flex';
+        // Add tiny timeout to allow display change before transition class
+        setTimeout(() => {
+            tweetModal.classList.add('active');
+        }, 10);
+    }
+
+    function closeTweetModal() {
+        tweetModal.classList.remove('active');
+        setTimeout(() => {
+            tweetModal.style.display = 'none';
+        }, 300); // match CSS transition duration
+    }
+
+    function updateCharCount() {
+        const textLen = tweetTextarea.value.length;
+        charCount.textContent = textLen;
+        
+        if (textLen > 280) {
+            charCount.parentElement.classList.add('warning');
+            submitTweetBtn.disabled = true;
+        } else {
+            charCount.parentElement.classList.remove('warning');
+            submitTweetBtn.disabled = false;
+        }
+    }
+
+    function toggleHashtag(chip) {
+        const tag = chip.dataset.tag;
+        let currentText = tweetTextarea.value;
+
+        if (chip.classList.contains('selected')) {
+            // Remove hashtag
+            chip.classList.remove('selected');
+            const regex = new RegExp(`\\s*${tag}\\b`, 'g');
+            tweetTextarea.value = currentText.replace(regex, '').trim();
+        } else {
+            // Add hashtag
+            chip.classList.add('selected');
+            tweetTextarea.value = `${currentText} ${tag}`.trim();
+        }
+        updateCharCount();
+    }
+
+    function submitTweet() {
+        const tweetText = tweetTextarea.value;
+        const intentUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(currentTweetLink)}`;
+        window.open(intentUrl, '_blank', 'width=550,height=420');
+        closeTweetModal();
+    }
+
 
     // Controls the visibility states of elements
     function showState(state) {
